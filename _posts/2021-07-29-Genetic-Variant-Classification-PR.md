@@ -1,4 +1,4 @@
-The [Genetic Variant Classification](https://www.kaggle.com/kevinarvai/clinvar-conflicting) dataset is a sample of observations from the [Clinvar](https://www.ncbi.nlm.nih.gov/clinvar/) archive, which is searchable collection of submissions from medical genetics laboratories and research institutions. Submissions consist of annotations of human genetic variants, and include many measures of the position of variants in the human genome, the type of variants, the likely disease outcome, and disease severity. The dataset used here was created in order to predict whether a variation has conflicting disease-severity classification from different submissions in the Clinvar archive. 
+The [Genetic Variant Classification](https://www.kaggle.com/kevinarvai/clinvar-conflicting) dataset is a sample of observations from the [Clinvar](https://www.ncbi.nlm.nih.gov/clinvar/) archive, which is searchable collection of submissions from medical genetics laboratories and research institutions. Submissions consist of annotations of human genetic variants, and include many measures of the position of variants in the human genome, the type of variants, the likely disease outcome, and disease severity. The dataset used here was created in order to predict whether a variation has conflicting disease-severity classification from different submissions in the Clinvar archive.
 
 Lets take a look at the data!
 
@@ -7,7 +7,7 @@ Lets take a look at the data!
 
 ```python
 def MissingUniqueStatistics(df): #from a kaggle EDA tutorial
-  
+
   total_entry_list = []
   total_missing_value_list = []
   missing_value_ratio_list = []
@@ -15,7 +15,7 @@ def MissingUniqueStatistics(df): #from a kaggle EDA tutorial
   unique_values_list = []
   number_of_unique_values_list = []
   variable_name_list = []
-  
+
   for col in df.columns:
 
     variable_name_list.append(col)
@@ -31,7 +31,7 @@ def MissingUniqueStatistics(df): #from a kaggle EDA tutorial
                            '#_Missing_Value':total_missing_value_list,'%_Missing_Value':missing_value_ratio_list,\
                            'Data_Type':data_type_list,'Unique_Values':unique_values_list,\
                            '#_Uniques_Values':number_of_unique_values_list})
-  
+
   return data_info_df.sort_values(by="#_Missing_Value",ascending=False)
 ```
 
@@ -568,7 +568,7 @@ sns.heatmap(df.isnull(), cbar = False)
 
 
 
-![png](2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_7_1.png)
+![png](/images/2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_7_1.png)
 
 
 ## Wrangler
@@ -603,16 +603,16 @@ def wrangle(df):
     index_nums = df['CLNHGVS'].apply(lambda x: re.findall(r'\d+', x))
     df['CLNHGVS'] = np.array([lyst[2] for lyst in index_nums.values]).astype('int')
     df.set_index('CLNHGVS', inplace=True)  
-    
+
     #find high-proportion-NaN columns (>.3), drop them.
     ratio_nan = (np.array([df[col].isna().sum() for col in df.columns]) / len(df)).round(3)
     ratio_nans = pd.Series(index=df.columns, data=ratio_nan)  
     high_nans = list(ratio_nans.loc[ratio_nans > 0.3].index)
     df.drop(columns=high_nans, inplace=True)
-    
+
     #Drop 'cDNA_position' & 'Protein_position' : linear-dependent with 'CDS_position'
-    df.drop(columns=['cDNA_position','Protein_position'], inplace=True) 
-    
+    df.drop(columns=['cDNA_position','Protein_position'], inplace=True)
+
     #Find catagorical features with cardinality between 2 and 300 -> low_card_cat_cols list
     cat_cols = df.select_dtypes(include='object').columns
     low_card_cat_cols = []
@@ -620,27 +620,27 @@ def wrangle(df):
         cardinality = df[col].unique().shape[0]
         if (cardinality < 300) and (cardinality > 1):
             low_card_cat_cols.append(col)
-    
+
     #numeric features to keep
     num_cols = df.select_dtypes(include='number').columns
-    
+
     # df composed of low(ish) cardinality catagoricals and numericals
     all_cols = np.concatenate((low_card_cat_cols, num_cols))
     df = df[all_cols]
-    
-    #Convert 'CHROM' data points 
+
+    #Convert 'CHROM' data points
     df['CHROM'][df['CHROM']=='X'] = 23
     df['CHROM'][df['CHROM']=='MT'] = 24
     df['CHROM'] = df['CHROM'].astype('int')
-    
+
     df.dropna(inplace=True) ## dropping nan rows 8000 -> 5000 rows, come back if time.
-    
+
     # BIOTYPE and Feature_type have only 1 value, after dropna() call,
     # Consequence is redundant with MC, CADD_PHRED is redundant with CADD_raw
     # AF_ESP and AF_TGP are redundant with AF_EXAC
-    df.drop(columns = ['BIOTYPE', 'Feature_type', 'Consequence', 'CADD_PHRED', 'AF_ESP', 'AF_TGP'], inplace=True) 
-    
-    
+    df.drop(columns = ['BIOTYPE', 'Feature_type', 'Consequence', 'CADD_PHRED', 'AF_ESP', 'AF_TGP'], inplace=True)
+
+
     return df
 ```
 
@@ -822,7 +822,7 @@ MissingUniqueStatistics(df)
 
 ## Splits
 
-The target for classification in this dataset is pre-determined. The columns 'CLASS' is a binary catagory, '0' encodes the agreement, '1' encodes disagreement on the pathogenicity of the varient(row). 
+The target for classification in this dataset is pre-determined. The columns 'CLASS' is a binary catagory, '0' encodes the agreement, '1' encodes disagreement on the pathogenicity of the varient(row).
 
 This is an imbalanced target with ~75% / ~25% agreement/disagreement classifications. I use the 'stratification=y' kwarg in train_test_split in order to maintain the target distribution in the training and testing sets.
 
@@ -844,7 +844,7 @@ plt.show()
 ```
 
 
-![png](2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_19_0.png)
+![png](/images/2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_19_0.png)
 
 
 
@@ -901,7 +901,7 @@ y_train.value_counts(), y_train.value_counts(normalize=True) #verify maintenance
 
 ## Baseline
 
-In our past assignments we have used majority-class-proportion as a baseline for classification models. Due to the target imbalance in this dataset, majority-class-proportion does not tell us much about the predictive power of our classifiers. Accuracy will be high even when classifying randomly. Instead, I choose to use a ROC-AUC score as my baseline, which summarizes true and false positive prediction rates. The worst case is a ROC-AUC score close to 0.5. Perfect predictive power is indicated by ROC-AUC of 1.0. 
+In our past assignments we have used majority-class-proportion as a baseline for classification models. Due to the target imbalance in this dataset, majority-class-proportion does not tell us much about the predictive power of our classifiers. Accuracy will be high even when classifying randomly. Instead, I choose to use a ROC-AUC score as my baseline, which summarizes true and false positive prediction rates. The worst case is a ROC-AUC score close to 0.5. Perfect predictive power is indicated by ROC-AUC of 1.0.
 
 In order to determine the ROC-AUC score one must fit the training data to some model and make a prediction on the test data. Here I use the sklearn DummyClasifier using the 'stratified' strategy, which classifies observations randomly but at the target distribution proportions. As expected, the baseline for this model is an ROC-AUC score of ~0.5.
 
@@ -920,7 +920,7 @@ y_pred_dummy = dummy_clf.predict(y_val)
 def rocplot(model, rows, pos, title):
     y_pred_proba = model.predict_proba(X_val)[:, 1]
     fpr, tpr, threshold = roc_curve(y_val, y_pred_proba)
-    
+
     plt.subplot(1,rows,pos)
     plt.plot(fpr, tpr)
     plt.plot([0,1], ls='--')
@@ -940,7 +940,7 @@ print('Baseline ROC-AUC Score: ', roc_auc_score(y_val, y_pred_dummy))
 ```
 
 
-![png](2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_28_0.png)
+![png](/images/2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_28_0.png)
 
 
     Baseline ROC-AUC Score:  0.496607887380758
@@ -952,9 +952,9 @@ print('Baseline ROC-AUC Score: ', roc_auc_score(y_val, y_pred_dummy))
 
 In the logistic regression model below we define a preprocessor in order to handle catagorical and numerical features differently. Categorical features are one-hot-encoded, numerical features are scaled to between -1.0 and 1.0.
 
-Again, due to the target imbalance in the data, special precautions are taken in order to mitigate poor performance on the minortiy class. Here I use the 'SMOTE' resampler from the 'imbalanced' library, which creates new observations of the minority class that are close to the existing ones such that the resampled training set is balanced. 
+Again, due to the target imbalance in the data, special precautions are taken in order to mitigate poor performance on the minortiy class. Here I use the 'SMOTE' resampler from the 'imbalanced' library, which creates new observations of the minority class that are close to the existing ones such that the resampled training set is balanced.
 
-I use sklearn's RandomizedSearchCV to select an appropriate 'C' level for the LogisticRegression classifier. 
+I use sklearn's RandomizedSearchCV to select an appropriate 'C' level for the LogisticRegression classifier.
 
 The best performing model uses a 'C' level of 1, and has an ROC-AUC score of 0.582. This is very modestly better than the baseline.
 
@@ -967,7 +967,7 @@ num_features = ['POS', 'AF_EXAC', 'ORIGIN', 'STRAND', 'LoFtool', 'CADD_RAW'] #nu
 num_transformer = StandardScaler() #remove mean, scale to between -1 and 1
 
 #column transformer to handle numerical and catagorical features seperately
-preprocessor = ColumnTransformer( 
+preprocessor = ColumnTransformer(
     transformers=[
         ('num', num_transformer, num_features),
         ('cat', cat_transformer, cat_features)])
@@ -980,7 +980,7 @@ pipeline = imbpipeline(steps = [['preprocessor', preprocessor],
 
 #make folds while preserving target class distribution.(Do I need this given I've already done splits?)
 stratified_kfold = StratifiedKFold(n_splits=3)
-    
+
 # 'C' is a regularization parameter, lower numbers enforce higher regularization.
 param_grid = {'classifier__C':[0.001, 0.01, 0.1, 1, 10, 100, 1000]}
 rand_search = RandomizedSearchCV(pipeline,
@@ -1000,29 +1000,29 @@ print('TRAINING ACCURACIES: \n', classification_report(y_train, model_LR.predict
 print('VALIDATION ACCURACIES: \n', classification_report(y_val, model_LR.predict(X_val)))
 ```
 
-    best hyperparameters:  {'classifier__C': 1} 
-    
-    TRAINING ACCURACIES: 
+    best hyperparameters:  {'classifier__C': 1}
+
+    TRAINING ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.86      0.30      0.45     35500
                1       0.29      0.86      0.44     12013
-    
+
         accuracy                           0.44     47513
        macro avg       0.58      0.58      0.44     47513
     weighted avg       0.72      0.44      0.45     47513
-     
-    
-    VALIDATION ACCURACIES: 
+
+
+    VALIDATION ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.86      0.31      0.46      8876
                1       0.30      0.85      0.44      3003
-    
+
         accuracy                           0.45     11879
        macro avg       0.58      0.58      0.45     11879
     weighted avg       0.72      0.45      0.45     11879
-    
+
 
 
 ### Decision Tree Ensemble: Random Forest Classifier
@@ -1031,7 +1031,7 @@ The Random Forest models again uses a ColumnTransformer to handle catagorical an
 
 SMOTE is used again to over-sample our minority class and balance the data before handing it to the classifier.
 
-RandomizedSearchCV is used to tune the hyperparameters max-depth, n_estimators, and min_sample_split of RandomForestClassifier. 
+RandomizedSearchCV is used to tune the hyperparameters max-depth, n_estimators, and min_sample_split of RandomForestClassifier.
 
 The best performing model from the cross-validator has a max_depth of 75, n_estimators of 180, and min_sample_split of 9. The ROC-AUC score of 0.657, a modest improvement over the baseline of 0.5.
 
@@ -1055,7 +1055,7 @@ pipeline = imbpipeline(steps = [['preprocessor', preprocessor],
                                ])
 
 stratified_kfold = StratifiedKFold(n_splits=3)
-    
+
 param_grid = {
     'classifier__max_depth': range(50,100,5), #how far each tree extends
     'classifier__n_estimators': range(150,220,10), #number of trees in the forest
@@ -1079,29 +1079,29 @@ print('TRAINING ACCURACIES: \n', classification_report(y_train, model_RF.predict
 print('VALIDATION ACCURACIES: \n', classification_report(y_val, model_RF.predict(X_val)))
 ```
 
-    best hyperparameters:  {'classifier__n_estimators': 180, 'classifier__min_samples_split': 9, 'classifier__max_depth': 75} 
-    
-    TRAINING ACCURACIES: 
+    best hyperparameters:  {'classifier__n_estimators': 180, 'classifier__min_samples_split': 9, 'classifier__max_depth': 75}
+
+    TRAINING ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.95      0.98      0.96     35500
                1       0.92      0.84      0.88     12013
-    
+
         accuracy                           0.94     47513
        macro avg       0.93      0.91      0.92     47513
     weighted avg       0.94      0.94      0.94     47513
-     
-    
-    VALIDATION ACCURACIES: 
+
+
+    VALIDATION ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.82      0.85      0.83      8876
                1       0.51      0.47      0.49      3003
-    
+
         accuracy                           0.75     11879
        macro avg       0.67      0.66      0.66     11879
     weighted avg       0.74      0.75      0.75     11879
-    
+
 
 
 ### Decision Tree Ensemble: Gradient Boosted Random Forest Classifier
@@ -1129,7 +1129,7 @@ pipeline = imbpipeline(steps = [['preprocessor', preprocessor],
                                ])
 
 stratified_kfold = StratifiedKFold(n_splits=3)
-    
+
 param_grid = {
     'classifier__n_estimators': range(8, 20),
     'classifier__max_depth': range(6, 10),
@@ -1157,36 +1157,36 @@ print('TRAINING ACCURACIES: \n', classification_report(y_train, model_XBRF.predi
 print('VALIDATION ACCURACIES: \n', classification_report(y_val, model_XBRF.predict(X_val)))
 ```
 
-    best hyperparameters:  {'classifier__n_estimators': 19, 'classifier__max_depth': 8, 'classifier__learning_rate': 0.45, 'classifier__colsample_bytree': 0.9} 
-    
-    TRAINING ACCURACIES: 
+    best hyperparameters:  {'classifier__n_estimators': 19, 'classifier__max_depth': 8, 'classifier__learning_rate': 0.45, 'classifier__colsample_bytree': 0.9}
+
+    TRAINING ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.86      0.84      0.85     35500
                1       0.56      0.58      0.57     12013
-    
+
         accuracy                           0.78     47513
        macro avg       0.71      0.71      0.71     47513
     weighted avg       0.78      0.78      0.78     47513
-     
-    
-    VALIDATION ACCURACIES: 
+
+
+    VALIDATION ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.83      0.82      0.82      8876
                1       0.49      0.52      0.50      3003
-    
+
         accuracy                           0.74     11879
        macro avg       0.66      0.67      0.66     11879
     weighted avg       0.75      0.74      0.74     11879
-    
+
 
 
 ## Results and Threshold-Tuning
 
 The logistic regression model with a ROC-AUC score of 0.582 was the worst performer of the three models. The two random forest models performed very similarly. The boosted model edged out the bagging model by only 0.016 for an ROC-AUC score of 0.666. (spooky!)
 
-A comparison of the training and validation classification reports above shows only marginal differences between predictions on training and validation sets and indicates that none of the models were grossly over fit to the training data. 
+A comparison of the training and validation classification reports above shows only marginal differences between predictions on training and validation sets and indicates that none of the models were grossly over fit to the training data.
 
 None of these models achieved very good predictive power of the minority class. Given the messy and inconsistent nature of the dataset I am encouraged that any improvement over the baseline was achieved.
 
@@ -1205,7 +1205,7 @@ print('Boosted Random Forest ROC-AUC score:' , roc_auc_score(y_val, model_XBRF.b
 ```
 
 
-![png](2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_44_0.png)
+![png](/images/2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_44_0.png)
 
 
     Logistic Regression ROC-AUC score: 0.582
@@ -1218,12 +1218,12 @@ At the suggestion of my instructor (Hi Nivi!), the false-positive-rate(fpr), tru
 
 ```python
 y_pred_proba = model_XBRF.predict_proba(X_val)[:, 1] #probability predictions by XBRF for X_val
-    
+
 fpr, tpr, thresholds = roc_curve(y_val, y_pred_proba) #roc-curve data saved in variables
 
 roccurve_df = pd.DataFrame({    #throw em in a df
-    'False Positive Rate': fpr, 
-    'True Positive Rate': tpr, 
+    'False Positive Rate': fpr,
+    'True Positive Rate': tpr,
     'Threshold': thresholds
 })
 
@@ -1239,31 +1239,31 @@ print('PRE-THRESHOLD-TUNED ACCURACIES: \n', classification_report(y_val, model_X
 print('POST-THRESHOLD-TUNED ACCURACIES: \n', classification_report(y_val, y_pred_proba_thresh))
 ```
 
-    PRE-THRESHOLD-TUNED ACCURACIES: 
+    PRE-THRESHOLD-TUNED ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.83      0.82      0.82      8876
                1       0.49      0.52      0.50      3003
-    
+
         accuracy                           0.74     11879
        macro avg       0.66      0.67      0.66     11879
     weighted avg       0.75      0.74      0.74     11879
-    
-    POST-THRESHOLD-TUNED ACCURACIES: 
+
+    POST-THRESHOLD-TUNED ACCURACIES:
                    precision    recall  f1-score   support
-    
+
                0       0.89      0.57      0.70      8876
                1       0.39      0.80      0.52      3003
-    
+
         accuracy                           0.63     11879
        macro avg       0.64      0.68      0.61     11879
     weighted avg       0.76      0.63      0.65     11879
-    
+
 
 
 ## Feature Importance
 
-If the models above achieved robust accuracy, it would be of interest to researchers and clinicians which of the features used to predict disagreement are strongest. My models were not very predictive, so the feature importance ranking and metrics below are to be taken very lightly. 
+If the models above achieved robust accuracy, it would be of interest to researchers and clinicians which of the features used to predict disagreement are strongest. My models were not very predictive, so the feature importance ranking and metrics below are to be taken very lightly.
 
 The feature importances from the XGBoost model rank 'AF_EXAC' as strongest. 'IMPACT' is a close second. Both of these features are pathogenicity scores, so it makes sense that they would be predictive. 'MC' column comes in a distant third. This feature represents type of variant in the mRNA created from the DNA variant. Given that it has some predictive power, it may be of interest to researchers. All other features make marginal contributions.
 
@@ -1280,17 +1280,17 @@ plt.show()
 ```
 
 
-![png](2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_50_0.png)
+![png](/images/2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_50_0.png)
 
 
 
 ```python
 perm_imp = permutation_importance(model_XBRF,X_val,y_val,random_state=42)
-permutation_importances = pd.DataFrame({'mean_imp': perm_imp['importances_mean'], 
+permutation_importances = pd.DataFrame({'mean_imp': perm_imp['importances_mean'],
                                         'std_imp': perm_imp['importances_std']},
                                         index = X_val.columns).sort_values(by='mean_imp', ascending=False)
 
-plt.barh(permutation_importances.index[-1::-1], 
+plt.barh(permutation_importances.index[-1::-1],
          permutation_importances.mean_imp.sort_values(),
          xerr=permutation_importances.std_imp.sort_values())
 plt.title('Permutation Importances')
@@ -1298,11 +1298,11 @@ plt.show()
 ```
 
 
-![png](2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_51_0.png)
+![png](/images/2021-07-29-Genetic-Variant-Classification-PR_files/2021-07-29-Genetic-Variant-Classification-PR_51_0.png)
 
 
 ## Informal Discussion
 
-This was a difficult dataset for a novice in both data-science and genetics. My suspicion is that this is primarily a feature engineering problem for which I have neither the skill nor domain-knowledge to really tackle. 
+This was a difficult dataset for a novice in both data-science and genetics. My suspicion is that this is primarily a feature engineering problem for which I have neither the skill nor domain-knowledge to really tackle.
 
 Despite the inherent difficulty, I am encouraged to have made a very modestly predictive model. (Although somewhat discouraged to find out at the end that the dominant features were pathogenicity scores). I believe I was successful in following good data-leakage, imbalanced-data-splitting, and hyper-parameter tuning practices. I am not very confident I implemented the SMOTE over-sampling function correctly, I had difficulty finding good usage examples for including catagorical data. There are a number of encoding options, and over/under sampling techniques that I would love to explore given time and compute. I really loved looking into the genetics terminology, and I consider this a first, faltering step of many into this sub-field of data-science.  
